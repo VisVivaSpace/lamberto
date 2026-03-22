@@ -1,0 +1,23 @@
+spk_file: "../../assets/de440s.bsp"
+
+sweeps:
+  - name: "Earth-Mars Prograde 0-rev"
+    departure_body: "Earth"
+    arrival_body: "Mars"
+    departure_start: "2026-01-01 00:00:00 TDB"
+    departure_end: "2026-12-31 00:00:00 TDB"
+    departure_step_days: 10.0
+    arrival_start: "2026-06-01 00:00:00 TDB"
+    arrival_end: "2027-12-31 00:00:00 TDB"
+    arrival_step_days: 10.0
+
+  - name: "Earth-Mars Prograde 1-rev"
+    departure_body: 3
+    arrival_body: 4
+    departure_start: "2026-01-01 00:00:00 TDB"
+    departure_end: "2026-12-31 00:00:00 TDB"
+    departure_step_days: 10.0
+    arrival_start: "2026-06-01 00:00:00 TDB"
+    arrival_end: "2027-12-31 00:00:00 TDB"
+    arrival_step_days: 10.0
+    nrev: 1

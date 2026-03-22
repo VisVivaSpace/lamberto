@@ -1,0 +1,20 @@
+[package]
+name = "lamberto"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Interplanetary trajectory scanner — sweeps departure/arrival date grids and solves Lambert's problem for pork-chop plots and trajectory catalogs"
+license = "MIT"
+repository = "https://github.com/VisVivaSpace/lamberto"
+authors = ["Vis Viva Space, LLC"]
+keywords = ["lambert", "trajectory", "astrodynamics", "pork-chop", "mission-design"]
+categories = ["science", "command-line-utilities"]
+readme = "README.md"
+
+[dependencies]
+anise = "0.9"
+gooding-lambert = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_yaml_ng = "0.9"
+clap = { version = "4", features = ["derive"] }
+csv = "1"
