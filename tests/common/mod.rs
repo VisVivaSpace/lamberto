@@ -6,13 +6,15 @@ use anise::prelude::Almanac;
 use lamberto::config::{BodySpec, Sweep};
 use lamberto::transfer::Direction;
 
-/// Load the DE440s almanac from the project assets directory.
+/// Load the DE440s almanac.
+///
+/// Uses `LAMBERTO_SPK_PATH` env var if set, otherwise defaults to
+/// `assets/de440s.bsp` (relative to crate root).
 pub fn load_almanac() -> Almanac {
-    // Integration tests run with cwd = crate root (code/lamberto/).
-    // The SPK file is at ../../assets/de440s.bsp relative to that.
-    let spk_path = "../../assets/de440s.bsp";
+    let spk_path = std::env::var("LAMBERTO_SPK_PATH")
+        .unwrap_or_else(|_| "assets/de440s.bsp".to_string());
     Almanac::default()
-        .load(spk_path)
+        .load(&spk_path)
         .unwrap_or_else(|e| panic!("Failed to load SPK file at '{spk_path}': {e}"))
 }
 
