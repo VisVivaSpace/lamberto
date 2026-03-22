@@ -57,7 +57,7 @@ pub fn classify_type(angle_rad: f64) -> u32 {
 }
 
 /// Check if two position vectors are nearly collinear (singularity for Lambert).
-/// Computes unit vectors, then checks if the norm of their cross product is < 1e-4.
+/// Computes unit vectors, then checks if the norm of their cross product is < 1e-15.
 pub fn is_near_singularity(r1: &[f64; 3], r2: &[f64; 3]) -> bool {
     let r1_mag = (r1[0] * r1[0] + r1[1] * r1[1] + r1[2] * r1[2]).sqrt();
     let r2_mag = (r2[0] * r2[0] + r2[1] * r2[1] + r2[2] * r2[2]).sqrt();
@@ -77,12 +77,13 @@ pub fn is_near_singularity(r1: &[f64; 3], r2: &[f64; 3]) -> bool {
         r1_hat[0] * r2_hat[1] - r1_hat[1] * r2_hat[0],
     ];
     let cross_norm = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt();
-    // Threshold 1e-4 chosen to be well above the gooding-lambert solver's
-    // internal 1e-10 tolerance.  Cases between 1e-10 and 1e-4 are close
-    // enough to collinear (near 0° or 180°) that the solver may produce
-    // unreliable results; classifying them as singularities gives cleaner
-    // diagnostics than opaque solver errors.
-    cross_norm < 1e-4
+    // Near machine-precision threshold. Only filters cases that would
+    // produce NaN or numerically meaningless results from the unit-vector
+    // math above. The gooding-lambert solver has its own singularity guard
+    // (at ~1e-10 relative to r1_mag*r2_mag) and will return an error for
+    // near-singular cases it can't handle — those get counted as
+    // skipped_solver, which is the honest classification.
+    cross_norm < 1e-15
 }
 
 /// Transfer type classification (e.g. Type I prograde, Type II-R retrograde).
@@ -151,16 +152,34 @@ mod tests {
 
     #[test]
     fn test_near_singularity() {
-        // Collinear same direction (0°) — singularity
+        // Exactly collinear (0°) — singularity (cross product is exactly zero)
         assert!(is_near_singularity(&[1.0, 0.0, 0.0], &[2.0, 0.0, 0.0]));
-        // Anti-parallel (180°) — singularity
+        // Exactly anti-parallel (180°) — singularity
         assert!(is_near_singularity(&[1.0, 0.0, 0.0], &[-1.0, 0.0, 0.0]));
-        // Nearly collinear — singularity
-        assert!(is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-8, 0.0]));
+        // Zero-magnitude vector — singularity (degenerate)
+        assert!(is_near_singularity(&[0.0, 0.0, 0.0], &[1.0, 0.0, 0.0]));
+        assert!(is_near_singularity(&[1.0, 0.0, 0.0], &[0.0, 0.0, 0.0]));
         // Not near singularity — 90 degrees
         assert!(!is_near_singularity(&[1.0, 0.0, 0.0], &[0.0, 1.0, 0.0]));
-        // Not near singularity — small but above threshold (~0.6°)
-        assert!(!is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-2, 0.0]));
+        // Not near singularity — very small angle (~5.7e-7 degrees)
+        // The threshold is 1e-15, so angles as small as ~1e-8 radians pass through.
+        // The solver decides what it can handle.
+        assert!(!is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-8, 0.0]));
+        // Not near singularity — small angle (~0.006 degrees)
+        assert!(!is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-4, 0.0]));
+    }
+
+    #[test]
+    fn singularity_threshold_is_near_machine_precision() {
+        // The threshold (1e-15) should only catch cases that are
+        // indistinguishable from collinear at double precision.
+        // The solver has its own guards for "close but not exact."
+
+        // Cross product norm of ~1e-16 (below threshold) — singularity
+        assert!(is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-16, 0.0]));
+
+        // Cross product norm of ~1e-14 (above threshold) — not singularity
+        assert!(!is_near_singularity(&[1.0, 0.0, 0.0], &[1.0, 1e-14, 0.0]));
     }
 
     #[test]
