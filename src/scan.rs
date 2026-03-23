@@ -168,8 +168,7 @@ impl Iterator for EpochRange {
 /// Pure computation — all diagnostics are collected in `SweepResult::diagnostics`
 /// rather than printed. Call `SweepResult::print_report()` for I/O.
 pub fn run_sweep(almanac: &Almanac, sweep: &Sweep) -> Result<SweepResult, LambertoError> {
-    let dep_frame =
-        resolve_frame(&sweep.departure_body).map_err(LambertoError::Ephemeris)?;
+    let dep_frame = resolve_frame(&sweep.departure_body).map_err(LambertoError::Ephemeris)?;
     let arr_frame = resolve_frame(&sweep.arrival_body).map_err(LambertoError::Ephemeris)?;
 
     let dep_start: Epoch = sweep
