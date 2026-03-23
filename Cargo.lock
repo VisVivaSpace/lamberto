@@ -911,6 +911,7 @@ name = "lamberto"
 version = "0.1.0"
 dependencies = [
  "anise",
+ "bytes",
  "clap",
  "csv",
  "gooding-lambert",

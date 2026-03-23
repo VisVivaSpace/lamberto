@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use std::process;
 
-use anise::prelude::Almanac;
 use clap::Parser;
 
 use lamberto::{config, output, scan};
@@ -30,11 +29,11 @@ fn main() {
 
     println!("Loaded {} sweep(s) from {}", config.sweeps.len(), cli.config);
 
-    // Load ephemeris
-    let almanac = match Almanac::default().load(&config.spk_file) {
+    // Load ephemeris (embedded + optional extra SPK from config)
+    let almanac = match lamberto::load_almanac(config.spk_file.as_deref()) {
         Ok(a) => a,
         Err(e) => {
-            eprintln!("Failed to load SPK file '{}': {e}", config.spk_file);
+            eprintln!("Failed to load ephemeris: {e}");
             process::exit(1);
         }
     };

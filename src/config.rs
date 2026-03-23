@@ -6,8 +6,10 @@ use crate::transfer::Direction;
 /// Top-level configuration loaded from a YAML file.
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    /// Path to the NAIF SPK ephemeris file.
-    pub spk_file: String,
+    /// Optional path to an additional NAIF SPK ephemeris file.
+    /// When omitted, only the embedded DE440 (2000–2075) is used.
+    #[serde(default)]
+    pub spk_file: Option<String>,
     /// List of trajectory sweeps to execute.
     pub sweeps: Vec<Sweep>,
 }
@@ -94,7 +96,7 @@ sweeps:
     arrival_step_days: 5.0
 "#;
         let config: Config = serde_yaml_ng::from_str(yaml).unwrap();
-        assert_eq!(config.spk_file, "assets/de440s.bsp");
+        assert_eq!(config.spk_file, Some("assets/de440s.bsp".to_string()));
         assert_eq!(config.sweeps.len(), 1);
         let s = &config.sweeps[0];
         assert!(matches!(s.departure_body, BodySpec::Name(ref n) if n == "Earth"));
@@ -143,7 +145,7 @@ sweeps:
     }
 
     #[test]
-    fn parse_missing_spk_file_field() {
+    fn parse_missing_spk_file_uses_default() {
         let yaml = r#"
 sweeps:
   - name: "Test"
@@ -156,13 +158,8 @@ sweeps:
     arrival_end: "2027-12-31 00:00:00 TDB"
     arrival_step_days: 5.0
 "#;
-        let result: Result<Config, _> = serde_yaml_ng::from_str(yaml);
-        assert!(result.is_err(), "missing spk_file should fail");
-        let err_msg = format!("{}", result.unwrap_err());
-        assert!(
-            err_msg.contains("missing field") || err_msg.contains("spk_file"),
-            "error should mention the missing field, got: {err_msg}"
-        );
+        let config: Config = serde_yaml_ng::from_str(yaml).unwrap();
+        assert_eq!(config.spk_file, None, "omitted spk_file should default to None");
     }
 
     #[test]

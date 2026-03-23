@@ -6,16 +6,12 @@ use anise::prelude::Almanac;
 use lamberto::config::{BodySpec, Sweep};
 use lamberto::transfer::Direction;
 
-/// Load the DE440s almanac.
-///
-/// Uses `LAMBERTO_SPK_PATH` env var if set, otherwise defaults to
-/// `assets/de440s.bsp` (relative to crate root).
+/// Load the almanac using the embedded ephemeris.
+/// If `LAMBERTO_SPK_PATH` is set, loads that as an additional kernel.
 pub fn load_almanac() -> Almanac {
-    let spk_path = std::env::var("LAMBERTO_SPK_PATH")
-        .unwrap_or_else(|_| "assets/de440s.bsp".to_string());
-    Almanac::default()
-        .load(&spk_path)
-        .unwrap_or_else(|e| panic!("Failed to load SPK file at '{spk_path}': {e}"))
+    let extra = std::env::var("LAMBERTO_SPK_PATH").ok();
+    lamberto::load_almanac(extra.as_deref())
+        .expect("Failed to load ephemeris")
 }
 
 /// Build a Sweep config for Earth-to-Mars with the given parameters.
