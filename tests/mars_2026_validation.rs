@@ -47,12 +47,20 @@ const DATE_TOLERANCE_DAYS: f64 = 5.0; // days
 
 /// Filter solutions to only those with transfer angle in the Type I range (< 180 deg).
 fn type_i_solutions(result: &SweepResult) -> Vec<&SolutionRow> {
-    result.solutions.iter().filter(|s| s.transfer_angle_deg < 180.0).collect()
+    result
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg < 180.0)
+        .collect()
 }
 
 /// Filter solutions to only those with transfer angle in the Type II range (> 180 deg).
 fn type_ii_solutions(result: &SweepResult) -> Vec<&SolutionRow> {
-    result.solutions.iter().filter(|s| s.transfer_angle_deg > 180.0).collect()
+    result
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg > 180.0)
+        .collect()
 }
 
 /// Find the solution with minimum C3 from a filtered slice.
@@ -134,14 +142,16 @@ fn type_i_min_c3() {
 
     let result = scan::run_sweep(&almanac, &sweep).expect("Type I sweep should succeed");
     let t1_sols = type_i_solutions(&result);
-    assert!(
-        !t1_sols.is_empty(),
-        "Should have Type I solutions"
-    );
+    assert!(!t1_sols.is_empty(), "Should have Type I solutions");
 
     let best = min_c3_of(&t1_sols);
 
-    assert_c3("Type I min C3", best.c3_departure_km2s2, 11.11, C3_TOLERANCE);
+    assert_c3(
+        "Type I min C3",
+        best.c3_departure_km2s2,
+        11.11,
+        C3_TOLERANCE,
+    );
     assert_vinf_arr("Type I min C3", best.v_inf_arrival_kms, 2.915);
     assert_date_within(
         "Type I min C3 departure",
@@ -190,10 +200,7 @@ fn type_i_min_vinf_arrival() {
 
     let result = scan::run_sweep(&almanac, &sweep).expect("Type I sweep should succeed");
     let t1_sols = type_i_solutions(&result);
-    assert!(
-        !t1_sols.is_empty(),
-        "Should have Type I solutions"
-    );
+    assert!(!t1_sols.is_empty(), "Should have Type I solutions");
 
     let best = min_vinf_arr_of(&t1_sols);
 
@@ -256,14 +263,16 @@ fn type_ii_min_c3() {
 
     let result = scan::run_sweep(&almanac, &sweep).expect("Type II sweep should succeed");
     let t2_sols = type_ii_solutions(&result);
-    assert!(
-        !t2_sols.is_empty(),
-        "Should have Type II solutions"
-    );
+    assert!(!t2_sols.is_empty(), "Should have Type II solutions");
 
     let best = min_c3_of(&t2_sols);
 
-    assert_c3("Type II min C3", best.c3_departure_km2s2, 9.144, C3_TOLERANCE);
+    assert_c3(
+        "Type II min C3",
+        best.c3_departure_km2s2,
+        9.144,
+        C3_TOLERANCE,
+    );
     assert_vinf_arr("Type II min C3", best.v_inf_arrival_kms, 2.729);
     assert_date_within(
         "Type II min C3 departure",
@@ -309,15 +318,17 @@ fn type_ii_min_vinf_arrival() {
 
     let result = scan::run_sweep(&almanac, &sweep).expect("Type II sweep should succeed");
     let t2_sols = type_ii_solutions(&result);
-    assert!(
-        !t2_sols.is_empty(),
-        "Should have Type II solutions"
-    );
+    assert!(!t2_sols.is_empty(), "Should have Type II solutions");
 
     let best = min_vinf_arr_of(&t2_sols);
 
     assert_vinf_arr("Type II min V_inf_arr", best.v_inf_arrival_kms, 2.565);
-    assert_c3("Type II min V_inf_arr", best.c3_departure_km2s2, 9.646, C3_TOLERANCE);
+    assert_c3(
+        "Type II min V_inf_arr",
+        best.c3_departure_km2s2,
+        9.646,
+        C3_TOLERANCE,
+    );
     assert_date_within(
         "Type II min V_inf_arr departure",
         best.departure_date,

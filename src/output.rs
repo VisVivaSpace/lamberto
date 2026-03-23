@@ -13,19 +13,22 @@ pub fn write_all(
     output_dir: &Path,
 ) -> Result<(), LambertoError> {
     // Create output directory if it doesn't exist
-    std::fs::create_dir_all(output_dir)
-        .map_err(|e| LambertoError::Output(e.to_string()))?;
+    std::fs::create_dir_all(output_dir).map_err(|e| LambertoError::Output(e.to_string()))?;
 
     let mut summaries = Vec::new();
 
     for (sweep, result) in config.sweeps.iter().zip(results.iter()) {
-
         // Write CSV
         let csv_path = output_dir.join(format!("{}.csv", sweep.name));
-        let csv_path_str = csv_path.to_str()
+        let csv_path_str = csv_path
+            .to_str()
             .ok_or_else(|| LambertoError::Output("invalid UTF-8 in output path".to_string()))?;
         write_csv(csv_path_str, &result.solutions)?;
-        println!("Wrote {} ({} rows)", csv_path.display(), result.solutions.len());
+        println!(
+            "Wrote {} ({} rows)",
+            csv_path.display(),
+            result.solutions.len()
+        );
 
         // Build summary entry
         let best_dep = result.best_departure_vinf(sweep.target_v_inf_departure);
@@ -39,17 +42,17 @@ pub fn write_all(
             skipped_singularity: result.skipped_singularity,
             skipped_solver_failure: result.skipped_solver,
             skipped_ephemeris: result.skipped_ephemeris,
-            best_departure_v_inf: best_dep.map(|s| BestEntry::from_row(s)),
-            best_arrival_v_inf: best_arr.map(|s| BestEntry::from_row(s)),
+            best_departure_v_inf: best_dep.map(BestEntry::from_row),
+            best_arrival_v_inf: best_arr.map(BestEntry::from_row),
         });
     }
 
     // Write YAML summary
     let summary_path = output_dir.join("summary.yaml");
-    let summary_yaml = serde_yaml_ng::to_string(&summaries)
-        .map_err(|e| LambertoError::Output(e.to_string()))?;
-    let mut f = std::fs::File::create(&summary_path)
-        .map_err(|e| LambertoError::Output(e.to_string()))?;
+    let summary_yaml =
+        serde_yaml_ng::to_string(&summaries).map_err(|e| LambertoError::Output(e.to_string()))?;
+    let mut f =
+        std::fs::File::create(&summary_path).map_err(|e| LambertoError::Output(e.to_string()))?;
     f.write_all(summary_yaml.as_bytes())
         .map_err(|e| LambertoError::Output(e.to_string()))?;
     println!("Wrote {}", summary_path.display());
@@ -57,12 +60,8 @@ pub fn write_all(
     Ok(())
 }
 
-fn write_csv(
-    path: &str,
-    solutions: &[SolutionRow],
-) -> Result<(), LambertoError> {
-    let mut wtr = csv::Writer::from_path(path)
-        .map_err(|e| LambertoError::Output(e.to_string()))?;
+fn write_csv(path: &str, solutions: &[SolutionRow]) -> Result<(), LambertoError> {
+    let mut wtr = csv::Writer::from_path(path).map_err(|e| LambertoError::Output(e.to_string()))?;
     wtr.write_record([
         "departure_date",
         "arrival_date",
@@ -72,7 +71,8 @@ fn write_csv(
         "c3_departure_km2s2",
         "v_inf_departure_kms",
         "v_inf_arrival_kms",
-    ]).map_err(|e| LambertoError::Output(e.to_string()))?;
+    ])
+    .map_err(|e| LambertoError::Output(e.to_string()))?;
     for row in solutions {
         wtr.write_record([
             row.departure_date.to_string(),
@@ -83,9 +83,11 @@ fn write_csv(
             format!("{:.6}", row.c3_departure_km2s2),
             format!("{:.6}", row.v_inf_departure_kms),
             format!("{:.6}", row.v_inf_arrival_kms),
-        ]).map_err(|e| LambertoError::Output(e.to_string()))?;
+        ])
+        .map_err(|e| LambertoError::Output(e.to_string()))?;
     }
-    wtr.flush().map_err(|e| LambertoError::Output(e.to_string()))?;
+    wtr.flush()
+        .map_err(|e| LambertoError::Output(e.to_string()))?;
     Ok(())
 }
 
@@ -138,8 +140,8 @@ impl BestEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anise::prelude::Epoch;
     use crate::transfer::{Direction, TransferType};
+    use anise::prelude::Epoch;
 
     /// Helper: build a SolutionRow with known values for deterministic testing.
     /// The `ttype` string is parsed into a TransferType: roman numeral gives
@@ -173,7 +175,10 @@ mod tests {
             arrival_date: arr.parse::<Epoch>().unwrap(),
             tof_days: tof,
             transfer_angle_deg: angle,
-            transfer_type: TransferType { type_num, direction },
+            transfer_type: TransferType {
+                type_num,
+                direction,
+            },
             c3_departure_km2s2: c3,
             v_inf_departure_kms: v_dep,
             v_inf_arrival_kms: v_arr,
@@ -259,9 +264,15 @@ mod tests {
         let fields: Vec<&str> = data_line.split(',').collect();
 
         // tof_days: 4 decimal places
-        assert_eq!(fields[2], "228.1235", "tof_days should have 4 decimal places");
+        assert_eq!(
+            fields[2], "228.1235",
+            "tof_days should have 4 decimal places"
+        );
         // transfer_angle_deg: 4 decimal places
-        assert_eq!(fields[3], "145.9877", "transfer_angle_deg should have 4 decimal places");
+        assert_eq!(
+            fields[3], "145.9877",
+            "transfer_angle_deg should have 4 decimal places"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }
@@ -291,8 +302,14 @@ mod tests {
 
         // c3, v_inf_departure, v_inf_arrival: 6 decimal places
         assert_eq!(fields[5], "10.123457", "c3 should have 6 decimal places");
-        assert_eq!(fields[6], "3.141593", "v_inf_departure should have 6 decimal places");
-        assert_eq!(fields[7], "2.718282", "v_inf_arrival should have 6 decimal places");
+        assert_eq!(
+            fields[6], "3.141593",
+            "v_inf_departure should have 6 decimal places"
+        );
+        assert_eq!(
+            fields[7], "2.718282",
+            "v_inf_arrival should have 6 decimal places"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }
@@ -305,9 +322,36 @@ mod tests {
         let path_str = path.to_str().unwrap();
 
         let rows = vec![
-            make_row("2026-06-01 00:00:00 TDB", "2027-01-15 00:00:00 TDB", 228.0, 90.0, "I", 10.0, 3.0, 2.0),
-            make_row("2026-07-01 00:00:00 TDB", "2027-02-15 00:00:00 TDB", 229.0, 180.0, "II", 11.0, 3.5, 2.5),
-            make_row("2026-08-01 00:00:00 TDB", "2027-03-15 00:00:00 TDB", 226.0, 270.0, "II", 12.0, 4.0, 3.0),
+            make_row(
+                "2026-06-01 00:00:00 TDB",
+                "2027-01-15 00:00:00 TDB",
+                228.0,
+                90.0,
+                "I",
+                10.0,
+                3.0,
+                2.0,
+            ),
+            make_row(
+                "2026-07-01 00:00:00 TDB",
+                "2027-02-15 00:00:00 TDB",
+                229.0,
+                180.0,
+                "II",
+                11.0,
+                3.5,
+                2.5,
+            ),
+            make_row(
+                "2026-08-01 00:00:00 TDB",
+                "2027-03-15 00:00:00 TDB",
+                226.0,
+                270.0,
+                "II",
+                12.0,
+                4.0,
+                3.0,
+            ),
         ];
         write_csv(path_str, &rows).unwrap();
 
@@ -335,14 +379,38 @@ mod tests {
         let yaml = serde_yaml_ng::to_string(&[&summary]).unwrap();
 
         assert!(yaml.contains("name:"), "YAML must contain 'name' field");
-        assert!(yaml.contains("total_grid_points:"), "YAML must contain 'total_grid_points'");
-        assert!(yaml.contains("valid_solutions:"), "YAML must contain 'valid_solutions'");
-        assert!(yaml.contains("skipped_tof:"), "YAML must contain 'skipped_tof'");
-        assert!(yaml.contains("skipped_singularity:"), "YAML must contain 'skipped_singularity'");
-        assert!(yaml.contains("skipped_solver_failure:"), "YAML must contain 'skipped_solver_failure'");
-        assert!(yaml.contains("skipped_ephemeris:"), "YAML must contain 'skipped_ephemeris'");
-        assert!(yaml.contains("best_departure_v_inf:"), "YAML must contain 'best_departure_v_inf'");
-        assert!(yaml.contains("best_arrival_v_inf:"), "YAML must contain 'best_arrival_v_inf'");
+        assert!(
+            yaml.contains("total_grid_points:"),
+            "YAML must contain 'total_grid_points'"
+        );
+        assert!(
+            yaml.contains("valid_solutions:"),
+            "YAML must contain 'valid_solutions'"
+        );
+        assert!(
+            yaml.contains("skipped_tof:"),
+            "YAML must contain 'skipped_tof'"
+        );
+        assert!(
+            yaml.contains("skipped_singularity:"),
+            "YAML must contain 'skipped_singularity'"
+        );
+        assert!(
+            yaml.contains("skipped_solver_failure:"),
+            "YAML must contain 'skipped_solver_failure'"
+        );
+        assert!(
+            yaml.contains("skipped_ephemeris:"),
+            "YAML must contain 'skipped_ephemeris'"
+        );
+        assert!(
+            yaml.contains("best_departure_v_inf:"),
+            "YAML must contain 'best_departure_v_inf'"
+        );
+        assert!(
+            yaml.contains("best_arrival_v_inf:"),
+            "YAML must contain 'best_arrival_v_inf'"
+        );
 
         assert!(yaml.contains("Earth-Mars Type I"));
         assert!(yaml.contains("1000"));
@@ -376,10 +444,22 @@ mod tests {
 
         let yaml = serde_yaml_ng::to_string(&[&summary]).unwrap();
 
-        assert!(yaml.contains("departure_date:"), "best entry must include departure_date");
-        assert!(yaml.contains("tof_days:"), "best entry must include tof_days");
-        assert!(yaml.contains("transfer_type:"), "best entry must include transfer_type");
-        assert!(yaml.contains("2026-06-15"), "departure_date value must appear");
+        assert!(
+            yaml.contains("departure_date:"),
+            "best entry must include departure_date"
+        );
+        assert!(
+            yaml.contains("tof_days:"),
+            "best entry must include tof_days"
+        );
+        assert!(
+            yaml.contains("transfer_type:"),
+            "best entry must include transfer_type"
+        );
+        assert!(
+            yaml.contains("2026-06-15"),
+            "departure_date value must appear"
+        );
     }
 
     #[test]

@@ -6,7 +6,11 @@ use clap::Parser;
 use lamberto::{config, output, scan};
 
 #[derive(Parser)]
-#[command(name = "lamberto", about = "Interplanetary trajectory scanner", version)]
+#[command(
+    name = "lamberto",
+    about = "Interplanetary trajectory scanner",
+    version
+)]
 struct Cli {
     /// Path to the sweep configuration YAML file
     config: String,
@@ -27,7 +31,11 @@ fn main() {
         }
     };
 
-    println!("Loaded {} sweep(s) from {}", config.sweeps.len(), cli.config);
+    println!(
+        "Loaded {} sweep(s) from {}",
+        config.sweeps.len(),
+        cli.config
+    );
 
     // Load ephemeris (embedded + optional extra SPK from config)
     let almanac = match lamberto::load_almanac(config.spk_file.as_deref()) {

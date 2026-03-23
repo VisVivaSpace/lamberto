@@ -77,32 +77,46 @@ fn run_opportunity(
 ) -> OpportunityResult {
     let sweep = earth_mars_sweep(
         &format!("{label} nrev=0"),
-        dep_start, dep_end, arr_start, arr_end,
+        dep_start,
+        dep_end,
+        arr_start,
+        arr_end,
         2.0,
         0,
         Direction::Prograde,
     );
-    let result = scan::run_sweep(almanac, &sweep)
-        .unwrap_or_else(|e| panic!("{label} sweep failed: {e}"));
+    let result =
+        scan::run_sweep(almanac, &sweep).unwrap_or_else(|e| panic!("{label} sweep failed: {e}"));
 
-    let type_i: Vec<_> = result.solutions.iter()
-        .filter(|s| s.transfer_angle_deg < 180.0).collect();
-    let type_ii: Vec<_> = result.solutions.iter()
-        .filter(|s| s.transfer_angle_deg > 180.0).collect();
+    let type_i: Vec<_> = result
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg < 180.0)
+        .collect();
+    let type_ii: Vec<_> = result
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg > 180.0)
+        .collect();
 
     eprintln!(
         "{label}: Type I solutions={}, Type II solutions={}",
-        type_i.len(), type_ii.len()
+        type_i.len(),
+        type_ii.len()
     );
 
-    let best_c3_type_i = type_i.iter()
+    let best_c3_type_i = type_i
+        .iter()
         .map(|s| s.c3_departure_km2s2)
         .fold(None, |acc, c3| Some(acc.map_or(c3, |a: f64| a.min(c3))));
-    let best_c3_type_ii = type_ii.iter()
+    let best_c3_type_ii = type_ii
+        .iter()
         .map(|s| s.c3_departure_km2s2)
         .fold(None, |acc, c3| Some(acc.map_or(c3, |a: f64| a.min(c3))));
 
-    let best = result.solutions.iter()
+    let best = result
+        .solutions
+        .iter()
         .min_by(|a, b| a.c3_departure_km2s2.total_cmp(&b.c3_departure_km2s2))
         .unwrap_or_else(|| panic!("{label}: sweep produced no solutions"))
         .clone();

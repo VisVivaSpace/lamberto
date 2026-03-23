@@ -113,7 +113,16 @@ pub fn type_label(type_num: u32, direction: Direction) -> Cow<'static, str> {
         4 => "IV",
         5 => "V",
         6 => "VI",
-        n => return Cow::Owned(format!("{n}{}", if matches!(direction, Direction::Retrograde) { "-R" } else { "" })),
+        n => {
+            return Cow::Owned(format!(
+                "{n}{}",
+                if matches!(direction, Direction::Retrograde) {
+                    "-R"
+                } else {
+                    ""
+                }
+            ));
+        }
     };
     match direction {
         Direction::Prograde => Cow::Borrowed(roman),
@@ -196,15 +205,15 @@ mod tests {
     fn roundtrip_prograde_plus_retrograde_equals_2pi() {
         // For any r1/r2 pair, prograde_angle + retrograde_angle = 2*pi
         let cases: Vec<([f64; 3], [f64; 3])> = vec![
-            ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),       // 90 deg
-            ([1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]),       // 180 deg (cross_z = 0)
-            ([1.0, 0.0, 0.0], [1.0, 1.0, 0.0]),        // 45 deg
-            ([1.0, 0.0, 0.0], [0.0, -1.0, 0.0]),       // 270 deg prograde
-            ([3.0, 4.0, 0.0], [-4.0, 3.0, 0.0]),       // 90 deg, different magnitudes
-            ([1.0, 1.0, 0.0], [-1.0, 1.0, 0.0]),       // 90 deg rotated
-            ([1.0, 0.0, 0.0], [1.0, 0.001, 0.0]),      // near-zero angle
-            ([1.0, 0.0, 0.0], [1.0, -0.001, 0.0]),     // near-2pi prograde
-            ([2.0, 3.0, 1.0], [-1.0, 4.0, -2.0]),      // 3D vectors
+            ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),    // 90 deg
+            ([1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]),   // 180 deg (cross_z = 0)
+            ([1.0, 0.0, 0.0], [1.0, 1.0, 0.0]),    // 45 deg
+            ([1.0, 0.0, 0.0], [0.0, -1.0, 0.0]),   // 270 deg prograde
+            ([3.0, 4.0, 0.0], [-4.0, 3.0, 0.0]),   // 90 deg, different magnitudes
+            ([1.0, 1.0, 0.0], [-1.0, 1.0, 0.0]),   // 90 deg rotated
+            ([1.0, 0.0, 0.0], [1.0, 0.001, 0.0]),  // near-zero angle
+            ([1.0, 0.0, 0.0], [1.0, -0.001, 0.0]), // near-2pi prograde
+            ([2.0, 3.0, 1.0], [-1.0, 4.0, -2.0]),  // 3D vectors
         ];
 
         for (r1, r2) in &cases {

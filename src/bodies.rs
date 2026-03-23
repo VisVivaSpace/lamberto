@@ -1,7 +1,6 @@
 use anise::constants::frames::{
-    EARTH_MOON_BARYCENTER_J2000, JUPITER_BARYCENTER_J2000, MARS_BARYCENTER_J2000,
-    MERCURY_J2000, NEPTUNE_BARYCENTER_J2000, SATURN_BARYCENTER_J2000,
-    URANUS_BARYCENTER_J2000, VENUS_J2000,
+    EARTH_MOON_BARYCENTER_J2000, JUPITER_BARYCENTER_J2000, MARS_BARYCENTER_J2000, MERCURY_J2000,
+    NEPTUNE_BARYCENTER_J2000, SATURN_BARYCENTER_J2000, URANUS_BARYCENTER_J2000, VENUS_J2000,
 };
 use anise::prelude::Frame;
 
@@ -59,17 +58,31 @@ mod tests {
 
     #[test]
     fn test_resolve_naif_id() {
-        assert_eq!(resolve_frame(&BodySpec::Id(3)).unwrap(), EARTH_MOON_BARYCENTER_J2000);
-        assert_eq!(resolve_frame(&BodySpec::Id(4)).unwrap(), MARS_BARYCENTER_J2000);
+        assert_eq!(
+            resolve_frame(&BodySpec::Id(3)).unwrap(),
+            EARTH_MOON_BARYCENTER_J2000
+        );
+        assert_eq!(
+            resolve_frame(&BodySpec::Id(4)).unwrap(),
+            MARS_BARYCENTER_J2000
+        );
     }
 
     #[test]
     fn test_resolve_all_planets() {
         for id in 1..=8 {
-            assert!(resolve_frame(&BodySpec::Id(id)).is_ok(), "NAIF ID {id} should resolve");
+            assert!(
+                resolve_frame(&BodySpec::Id(id)).is_ok(),
+                "NAIF ID {id} should resolve"
+            );
         }
-        for name in ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"] {
-            assert!(resolve_frame(&BodySpec::Name(name.to_string())).is_ok(), "{name} should resolve");
+        for name in [
+            "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune",
+        ] {
+            assert!(
+                resolve_frame(&BodySpec::Name(name.to_string())).is_ok(),
+                "{name} should resolve"
+            );
         }
     }
 

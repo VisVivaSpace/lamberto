@@ -39,7 +39,8 @@ fn near_180_singularity_is_skipped_without_crash() {
 
     eprintln!(
         "Singularity test: {} solutions, {} singularity skips",
-        r.solutions.len(), r.skipped_singularity,
+        r.solutions.len(),
+        r.skipped_singularity,
     );
 
     if r.skipped_singularity > 0 {
@@ -79,25 +80,46 @@ fn solutions_straddle_180_boundary() {
 
     let r = scan::run_sweep(&almanac, &sweep).expect("sweep failed");
 
-    let type_i: Vec<_> = r.solutions.iter().filter(|s| s.transfer_angle_deg < 180.0).collect();
-    let type_ii: Vec<_> = r.solutions.iter().filter(|s| s.transfer_angle_deg > 180.0).collect();
+    let type_i: Vec<_> = r
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg < 180.0)
+        .collect();
+    let type_ii: Vec<_> = r
+        .solutions
+        .iter()
+        .filter(|s| s.transfer_angle_deg > 180.0)
+        .collect();
 
-    assert!(!type_i.is_empty(), "Should have Type I solutions (< 180 deg)");
-    assert!(!type_ii.is_empty(), "Should have Type II solutions (> 180 deg)");
+    assert!(
+        !type_i.is_empty(),
+        "Should have Type I solutions (< 180 deg)"
+    );
+    assert!(
+        !type_ii.is_empty(),
+        "Should have Type II solutions (> 180 deg)"
+    );
 
     // Check type labels
     for sol in &type_i {
-        assert_eq!(sol.transfer_type.type_num, 1,
-            "Type I solution has wrong label: {}", sol.transfer_type);
+        assert_eq!(
+            sol.transfer_type.type_num, 1,
+            "Type I solution has wrong label: {}",
+            sol.transfer_type
+        );
     }
     for sol in &type_ii {
-        assert_eq!(sol.transfer_type.type_num, 2,
-            "Type II solution has wrong label: {}", sol.transfer_type);
+        assert_eq!(
+            sol.transfer_type.type_num, 2,
+            "Type II solution has wrong label: {}",
+            sol.transfer_type
+        );
     }
 
     eprintln!(
         "Boundary straddle: {} Type I solutions (all <180), {} Type II solutions (all >180)",
-        type_i.len(), type_ii.len()
+        type_i.len(),
+        type_ii.len()
     );
 }
 
@@ -226,7 +248,11 @@ fn very_long_tof_still_solves() {
             "Long TOF: {} solutions, min TOF={:.1} days, max TOF={:.1} days",
             result.solutions.len(),
             min_tof,
-            result.solutions.iter().map(|s| s.tof_days).fold(f64::NEG_INFINITY, f64::max),
+            result
+                .solutions
+                .iter()
+                .map(|s| s.tof_days)
+                .fold(f64::NEG_INFINITY, f64::max),
         );
     } else {
         eprintln!(
@@ -356,7 +382,9 @@ fn prograde_vs_retrograde_differ() {
     if pro_count > 0 && retro_count > 0 {
         // If solution counts differ, that alone proves they differ.
         if pro_count != retro_count {
-            eprintln!("Solution counts differ ({pro_count} vs {retro_count}) -- directions produce different results");
+            eprintln!(
+                "Solution counts differ ({pro_count} vs {retro_count}) -- directions produce different results"
+            );
         } else {
             // Compare min-C3 values as a proxy.
             let pro_min_c3 = r_pro
@@ -499,7 +527,8 @@ fn grid_point_accounting_invariant() {
         + result.skipped_ephemeris;
 
     assert_eq!(
-        accounted, result.total_points,
+        accounted,
+        result.total_points,
         "Grid point accounting: solutions({}) + skipped_tof({}) + \
          skipped_singularity({}) + skipped_solver({}) + skipped_ephemeris({}) = {} != total_points({})",
         result.solutions.len(),

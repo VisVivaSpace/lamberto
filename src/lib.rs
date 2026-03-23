@@ -28,10 +28,9 @@ pub const EMBEDDED_SPK: &[u8] = include_bytes!("../assets/de440-shorter.bsp");
 /// Load an Almanac with the embedded ephemeris, optionally loading
 /// an additional SPK file on top.
 pub fn load_almanac(extra_spk: Option<&str>) -> Result<anise::prelude::Almanac, LambertoError> {
-    let almanac = anise::prelude::Almanac::default().load_from_bytes(
-        bytes::BytesMut::from(EMBEDDED_SPK),
-    )
-    .map_err(|e| LambertoError::Ephemeris(format!("embedded SPK: {e}")))?;
+    let almanac = anise::prelude::Almanac::default()
+        .load_from_bytes(bytes::BytesMut::from(EMBEDDED_SPK))
+        .map_err(|e| LambertoError::Ephemeris(format!("embedded SPK: {e}")))?;
 
     match extra_spk {
         Some(path) => almanac

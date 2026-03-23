@@ -36,11 +36,23 @@ pub struct SolutionRow {
 #[derive(Debug, Clone)]
 pub enum SweepDiagnostic {
     /// Ephemeris query failed for a body at the given epoch.
-    EphemerisError { epoch: Epoch, body: &'static str, error: String },
+    EphemerisError {
+        epoch: Epoch,
+        body: &'static str,
+        error: String,
+    },
     /// Departure/arrival positions are nearly collinear (Lambert singularity).
-    NearSingularity { dep: Epoch, arr: Epoch, angle_deg: f64 },
+    NearSingularity {
+        dep: Epoch,
+        arr: Epoch,
+        angle_deg: f64,
+    },
     /// Lambert solver returned an error for this grid point.
-    SolverFailure { dep: Epoch, arr: Epoch, error: String },
+    SolverFailure {
+        dep: Epoch,
+        arr: Epoch,
+        error: String,
+    },
 }
 
 /// Statistics and results from one sweep.
@@ -67,24 +79,20 @@ pub struct SweepResult {
 impl SweepResult {
     /// Find solution closest to target departure v-infinity.
     pub fn best_departure_vinf(&self, target: f64) -> Option<&SolutionRow> {
-        self.solutions
-            .iter()
-            .min_by(|a, b| {
-                let da = (a.v_inf_departure_kms - target).abs();
-                let db = (b.v_inf_departure_kms - target).abs();
-                da.total_cmp(&db)
-            })
+        self.solutions.iter().min_by(|a, b| {
+            let da = (a.v_inf_departure_kms - target).abs();
+            let db = (b.v_inf_departure_kms - target).abs();
+            da.total_cmp(&db)
+        })
     }
 
     /// Find solution closest to target arrival v-infinity.
     pub fn best_arrival_vinf(&self, target: f64) -> Option<&SolutionRow> {
-        self.solutions
-            .iter()
-            .min_by(|a, b| {
-                let da = (a.v_inf_arrival_kms - target).abs();
-                let db = (b.v_inf_arrival_kms - target).abs();
-                da.total_cmp(&db)
-            })
+        self.solutions.iter().min_by(|a, b| {
+            let da = (a.v_inf_arrival_kms - target).abs();
+            let db = (b.v_inf_arrival_kms - target).abs();
+            da.total_cmp(&db)
+        })
     }
 
     /// Print diagnostics and summary to stderr/stdout.
@@ -95,7 +103,11 @@ impl SweepResult {
                 SweepDiagnostic::EphemerisError { epoch, body, error } => {
                     eprintln!("Ephemeris error at {body}={epoch}: {error}");
                 }
-                SweepDiagnostic::NearSingularity { dep, arr, angle_deg } => {
+                SweepDiagnostic::NearSingularity {
+                    dep,
+                    arr,
+                    angle_deg,
+                } => {
                     eprintln!("Warning: near-singularity at dep={dep}, arr={arr}");
                     eprintln!("  \u{03b8}={angle_deg:.2}\u{00b0}");
                 }
@@ -155,22 +167,26 @@ impl Iterator for EpochRange {
 ///
 /// Pure computation — all diagnostics are collected in `SweepResult::diagnostics`
 /// rather than printed. Call `SweepResult::print_report()` for I/O.
-pub fn run_sweep(
-    almanac: &Almanac,
-    sweep: &Sweep,
-) -> Result<SweepResult, LambertoError> {
-    let dep_frame = resolve_frame(&sweep.departure_body)
-        .map_err(|e| LambertoError::Ephemeris(e))?;
-    let arr_frame = resolve_frame(&sweep.arrival_body)
-        .map_err(|e| LambertoError::Ephemeris(e))?;
+pub fn run_sweep(almanac: &Almanac, sweep: &Sweep) -> Result<SweepResult, LambertoError> {
+    let dep_frame =
+        resolve_frame(&sweep.departure_body).map_err(LambertoError::Ephemeris)?;
+    let arr_frame = resolve_frame(&sweep.arrival_body).map_err(LambertoError::Ephemeris)?;
 
-    let dep_start: Epoch = sweep.departure_start.parse()
+    let dep_start: Epoch = sweep
+        .departure_start
+        .parse()
         .map_err(|e| LambertoError::Config(format!("{e}")))?;
-    let dep_end: Epoch = sweep.departure_end.parse()
+    let dep_end: Epoch = sweep
+        .departure_end
+        .parse()
         .map_err(|e| LambertoError::Config(format!("{e}")))?;
-    let arr_start: Epoch = sweep.arrival_start.parse()
+    let arr_start: Epoch = sweep
+        .arrival_start
+        .parse()
         .map_err(|e| LambertoError::Config(format!("{e}")))?;
-    let arr_end: Epoch = sweep.arrival_end.parse()
+    let arr_end: Epoch = sweep
+        .arrival_end
+        .parse()
         .map_err(|e| LambertoError::Config(format!("{e}")))?;
 
     if sweep.departure_step_days <= 0.0 {
@@ -240,8 +256,16 @@ pub fn run_sweep(
                 }
             };
 
-            let r1 = [dep_state.radius_km.x, dep_state.radius_km.y, dep_state.radius_km.z];
-            let r2 = [arr_state.radius_km.x, arr_state.radius_km.y, arr_state.radius_km.z];
+            let r1 = [
+                dep_state.radius_km.x,
+                dep_state.radius_km.y,
+                dep_state.radius_km.z,
+            ];
+            let r2 = [
+                arr_state.radius_km.x,
+                arr_state.radius_km.y,
+                arr_state.radius_km.z,
+            ];
             let v_planet1 = [
                 dep_state.velocity_km_s.x,
                 dep_state.velocity_km_s.y,
@@ -276,7 +300,15 @@ pub fn run_sweep(
             };
 
             // Use nrev directly from config — no type-to-nrev mapping
-            match gooding_lambert::lambert(MU_SUN, r1, r2, tof_seconds, sweep.nrev, lambert_dir, gooding_lambert::MultiRevPeriod::LongPeriod) {
+            match gooding_lambert::lambert(
+                MU_SUN,
+                r1,
+                r2,
+                tof_seconds,
+                sweep.nrev,
+                lambert_dir,
+                gooding_lambert::MultiRevPeriod::LongPeriod,
+            ) {
                 Ok(sol) => {
                     let v_inf_dep = vec3_sub(&sol.v1, &v_planet1);
                     let v_inf_arr = vec3_sub(&sol.v2, &v_planet2);

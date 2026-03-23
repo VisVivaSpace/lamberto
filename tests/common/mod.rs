@@ -10,8 +10,7 @@ use lamberto::transfer::Direction;
 /// If `LAMBERTO_SPK_PATH` is set, loads that as an additional kernel.
 pub fn load_almanac() -> Almanac {
     let extra = std::env::var("LAMBERTO_SPK_PATH").ok();
-    lamberto::load_almanac(extra.as_deref())
-        .expect("Failed to load ephemeris")
+    lamberto::load_almanac(extra.as_deref()).expect("Failed to load ephemeris")
 }
 
 /// Build a Sweep config for Earth-to-Mars with the given parameters.

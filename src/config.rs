@@ -69,10 +69,10 @@ pub struct Sweep {
 
 /// Load and parse a sweep configuration from a YAML file.
 pub fn load_config(path: impl AsRef<std::path::Path>) -> Result<Config, LambertoError> {
-    let contents = std::fs::read_to_string(path.as_ref())
-        .map_err(|e| LambertoError::Config(e.to_string()))?;
-    let config: Config = serde_yaml_ng::from_str(&contents)
-        .map_err(|e| LambertoError::Config(e.to_string()))?;
+    let contents =
+        std::fs::read_to_string(path.as_ref()).map_err(|e| LambertoError::Config(e.to_string()))?;
+    let config: Config =
+        serde_yaml_ng::from_str(&contents).map_err(|e| LambertoError::Config(e.to_string()))?;
     Ok(config)
 }
 
@@ -159,7 +159,10 @@ sweeps:
     arrival_step_days: 5.0
 "#;
         let config: Config = serde_yaml_ng::from_str(yaml).unwrap();
-        assert_eq!(config.spk_file, None, "omitted spk_file should default to None");
+        assert_eq!(
+            config.spk_file, None,
+            "omitted spk_file should default to None"
+        );
     }
 
     #[test]
@@ -333,7 +336,10 @@ sweeps: []
         std::fs::write(&path, ":::not valid yaml{{{").unwrap();
 
         let result = load_config(path.to_str().unwrap());
-        assert!(result.is_err(), "load_config with malformed file should return Err");
+        assert!(
+            result.is_err(),
+            "load_config with malformed file should return Err"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }
